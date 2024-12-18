@@ -28,15 +28,15 @@ public class UserManagementService {
             throw new InvalidRequestType("user already exists!");
         });
         if (request.getPassword().length() < 6) {
-            throw new InvalidRequestType("password length must be gather than 6");
+            throw new InvalidRequestType("password length must be greater than 6");
         }
         UserEntity user = new UserEntity();
         user.setName(request.getName());
-        user.setEmail(user.getEmail());
+        user.setEmail(request.getEmail());
         user.setPassword(request.getPassword());
 
         userRepository.save(user);
-        applicationEventPublisher.publishEvent(new UserRegisterEvent(user));
+        //applicationEventPublisher.publishEvent(new UserRegisterEvent(user));
     }
 
     public String login(UserLoginRequest request) {
