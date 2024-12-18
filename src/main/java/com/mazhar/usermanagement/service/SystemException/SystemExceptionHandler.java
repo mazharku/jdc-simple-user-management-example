@@ -1,10 +1,10 @@
 package com.mazhar.usermanagement.service.SystemException;
 
 
+import com.mazhar.usermanagement.model.dto.ErrorMessage;
 import com.mazhar.usermanagement.model.dto.exceptions.InvalidRequestType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springdoc.api.ErrorMessage;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
