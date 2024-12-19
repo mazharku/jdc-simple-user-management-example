@@ -14,20 +14,45 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.jdbc.Sql;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.shaded.org.hamcrest.Matcher;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+import java.util.*;
+import java.util.concurrent.Callable;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
+import static org.testcontainers.shaded.org.hamcrest.Matchers.notNullValue;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Sql(scripts = "/test-data.sql")
 @Tag(value = "integration")
 public class UserManagementControllerTests {
+    private static final String MAIL_DEV = "maildev/maildev:2.1.0";
     @Autowired
     protected TestRestTemplate restTemplate;
+    private static final GenericContainer<?> mailDevContainer = new GenericContainer<>(MAIL_DEV);
+
+    @DynamicPropertySource
+    static void setup(DynamicPropertyRegistry registry) {
+        mailDevContainer.withExposedPorts(1080, 1025)
+                .withAccessToHost(true)
+                .withReuse(true)
+                .withLabel("security","email");
+
+        mailDevContainer.start();
+
+        registry.add("spring.mail.host", mailDevContainer::getHost);
+        registry.add("spring.mail.port", () -> mailDevContainer.getMappedPort(1025).toString());
+        registry.add("spring.mail.properties.mail.smtp.auth", () -> false);
+        registry.add("spring.mail.properties.mail.smtp.starttls.enable", () -> false);
+    }
 
     @Test
     void createUser_InvalidEmailFormat_ThrowException() {
@@ -193,5 +218,27 @@ public class UserManagementControllerTests {
         Assertions.assertNotNull(response.getBody());
         Assertions.assertEquals(Base64.getEncoder().encodeToString(token.getBytes(StandardCharsets.UTF_8)), response.getBody());
 
+    }
+
+    private boolean isEmailExistsInMailServer() {
+        String mailServerUrl = "http://" + mailDevContainer.getHost() + ":" + mailDevContainer.getMappedPort(1080) + "/email";
+
+        Map[] emails =waitForResponse(() -> getEmailsFromTheServer(mailServerUrl), notNullValue()) ;
+
+        List<LinkedHashMap<String, Object>> maps = Arrays.stream(emails).
+                map(email -> (LinkedHashMap<String, Object>) email).toList();
+
+        return !maps.isEmpty();
+    }
+
+    private Map[] getEmailsFromTheServer(String mailServerUrl) {
+        var response = restTemplate.getForEntity(mailServerUrl, Map[].class);
+        return response.getBody();
+    }
+
+    private  <T> T waitForResponse(Callable<T> supplier, Matcher<? super T> matcher) {
+        return await().atMost(15, SECONDS)
+                .pollInterval(5, SECONDS)
+                .until(supplier, matcher);
     }
 }

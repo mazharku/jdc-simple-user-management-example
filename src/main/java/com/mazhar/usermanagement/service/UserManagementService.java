@@ -36,6 +36,7 @@ public class UserManagementService {
         user.setPassword(request.getPassword());
 
         userRepository.save(user);
+        applicationEventPublisher.publishEvent(new UserRegisterEvent(user));
     }
 
     public String login(UserLoginRequest request) {
