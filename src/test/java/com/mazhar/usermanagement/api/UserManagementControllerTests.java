@@ -1,6 +1,7 @@
 package com.mazhar.usermanagement.api;
 
 
+import com.mazhar.usermanagement.TestcontainersConfiguration;
 import com.mazhar.usermanagement.model.dto.ErrorMessage;
 import com.mazhar.usermanagement.model.dto.UserLoginRequest;
 import com.mazhar.usermanagement.model.dto.UserRegistrationRequest;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.test.context.jdbc.Sql;
@@ -19,6 +21,7 @@ import java.util.Base64;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+@Import(TestcontainersConfiguration.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Sql(scripts = "/test-data.sql")
 @Tag(value = "integration")
