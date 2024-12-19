@@ -12,11 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.jdbc.Sql;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.lifecycle.Startables;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -27,26 +23,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @Sql(scripts = "/test-data.sql")
 @Tag(value = "integration")
 public class UserManagementControllerTests {
-    private static final String POSTGRES = "postgres:14";
-    private static final PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>(POSTGRES);
-
     @Autowired
     protected TestRestTemplate restTemplate;
-
-
-    @DynamicPropertySource
-    static void setup(DynamicPropertyRegistry registry) {
-        postgreSQLContainer
-                .withDatabaseName("testdb")
-                .withUsername("test")
-                .withPassword("test");
-
-
-        Startables.deepStart(postgreSQLContainer).join();
-        registry.add("spring.datasource.url", () -> "jdbc:tc:postgresql:14:///testdb");
-        registry.add("spring.datasource.username", () -> "test");
-        registry.add("spring.datasource.password", () -> "test");
-    }
 
     @Test
     void createUser_InvalidEmailFormat_ThrowException() {
@@ -99,7 +77,7 @@ public class UserManagementControllerTests {
     @Test
     void createUser_InvalidPasswordLength_ThrowException() {
         UserRegistrationRequest registrationRequest = new UserRegistrationRequest();
-        registrationRequest.setEmail("abcf@test.com");
+        registrationRequest.setEmail("user123@test.com");
         registrationRequest.setPassword("12345");
         registrationRequest.setName("abc");
 
@@ -123,7 +101,7 @@ public class UserManagementControllerTests {
     @Test
     void createUser_ValidInput_success() {
         UserRegistrationRequest registrationRequest = new UserRegistrationRequest();
-        registrationRequest.setEmail("abcd@test.com");
+        registrationRequest.setEmail("xyz1@test.com");
         registrationRequest.setPassword("123456");
         registrationRequest.setName("abcd");
 
@@ -147,7 +125,7 @@ public class UserManagementControllerTests {
     @Test
     void login_UserNotFound_ThrowInvalidUserError() {
         UserLoginRequest loginRequest = new UserLoginRequest();
-        loginRequest.setEmail("abcdk@test.com");
+        loginRequest.setEmail("user123@test.com");
         loginRequest.setPassword("123456");
 
         HttpHeaders headers = new HttpHeaders();
