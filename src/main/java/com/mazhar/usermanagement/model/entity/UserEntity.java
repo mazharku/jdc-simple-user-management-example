@@ -2,6 +2,8 @@ package com.mazhar.usermanagement.model.entity;
 
 import jakarta.persistence.*;
 
+import java.util.Objects;
+
 
 @Table(name = "users")
 @Entity
@@ -45,5 +47,18 @@ public class UserEntity {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserEntity that = (UserEntity) o;
+        return Objects.equals(id, that.id) && Objects.equals(email, that.email) && Objects.equals(name, that.name) && Objects.equals(password, that.password);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, email, name, password);
     }
 }
