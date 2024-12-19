@@ -15,11 +15,4 @@ public class TestcontainersConfiguration {
 		return new PostgreSQLContainer<>(DockerImageName.parse(POSTGRES));
 	}
 
-	 /*@DynamicPropertySource
-    static void setup(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", () -> "jdbc:tc:postgresql:14:///testdb");
-        registry.add("spring.datasource.username", () -> "test");
-        registry.add("spring.datasource.password", () -> "test");
-    }*/
-
 }
