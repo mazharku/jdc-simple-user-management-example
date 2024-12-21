@@ -6,6 +6,7 @@ import com.mazhar.usermanagement.model.dto.ErrorMessage;
 import com.mazhar.usermanagement.model.dto.UserLoginRequest;
 import com.mazhar.usermanagement.model.dto.UserRegistrationRequest;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,7 @@ public class UserManagementControllerTests {
     }
 
     @Test
+    @DisplayName("create user invalid email will throw exception")
     void createUser_InvalidEmailFormat_ThrowException() {
         UserRegistrationRequest registrationRequest = new UserRegistrationRequest();
         registrationRequest.setEmail("abc");
@@ -147,7 +149,7 @@ public class UserManagementControllerTests {
         String message = response.getBody();
         Assertions.assertNotNull(message);
         Assertions.assertEquals("user registered successfully", message);
-
+        Assertions.assertTrue(isEmailExistsInMailServer());
     }
 
     @Test
