@@ -19,7 +19,10 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.shaded.org.hamcrest.Matcher;
+import org.testcontainers.utility.DockerImageName;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -30,15 +33,17 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.notNullValue;
 
-@Import(TestcontainersConfiguration.class)
+//@Import(TestcontainersConfiguration.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Sql(scripts = "/test-data.sql")
 @Tag(value = "integration")
 public class UserManagementControllerTests {
+    private static final String POSTGRES = "postgres:14";
     private static final String MAIL_DEV = "maildev/maildev:2.1.0";
     @Autowired
     protected TestRestTemplate restTemplate;
     private static final GenericContainer<?> mailDevContainer = new GenericContainer<>(MAIL_DEV);
+    private static final PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>(DockerImageName.parse(POSTGRES));
 
     @DynamicPropertySource
     static void setup(DynamicPropertyRegistry registry) {
@@ -47,8 +52,12 @@ public class UserManagementControllerTests {
                 .withReuse(true)
                 .withLabel("security","email");
 
-        mailDevContainer.start();
 
+        Startables.deepStart(postgresContainer, mailDevContainer).join();
+
+        registry.add("spring.datasource.url",()-> postgresContainer.getJdbcUrl());
+        registry.add("spring.datasource.username", ()-> postgresContainer.getUsername());
+        registry.add("spring.datasource.password", ()-> postgresContainer.getPassword());
         registry.add("spring.mail.host", mailDevContainer::getHost);
         registry.add("spring.mail.port", () -> mailDevContainer.getMappedPort(1025).toString());
         registry.add("spring.mail.properties.mail.smtp.auth", () -> false);
